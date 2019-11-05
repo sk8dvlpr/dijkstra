@@ -5,77 +5,124 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Testing Site</title>
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
     <style>
-        /* Always set the map height explicitly to define the size of the div
-         * element that contains the map. */
         #map {
-          height: 100%;
+          height: 70%;
         }
-        /* Optional: Makes the sample page fill the window. */
-        html, body {
+        html, body, .container {
           height: 100%;
-          margin: 0;
-          padding: 0;
         }
       </style>
 </head>
 <body>
-    <div id="map"></div>
+    <div class="container py-3">
+        <h1 class="text-center">DIJKSTRA</h1>
+        <form>
+            <div class="form-row">
+                <div class="col-lg-2 col-md-3 py-1">
+                    <label for="tools" class="my-2">Choose Tools:</label>
+                </div>
+                <div class="col-lg-8 col-md-6 py-1">
+                    <select class="form-control" name="tools" id="tools" onchange="setTools()">
+                        <option value="">Choose</option>
+                        <option value="add_node">Add Node</option>
+                        <option value="add_line">Add Line</option>
+                        <option value="add_destination">Add destionation</option>
+                        <option value="add_route">Add route</option>
+                    </select>
+                </div>
+                <div class="col-lg-2 col-md-3 py-1">
+                    <button class="btn btn-light btn-block">Generate SQL</button>
+                </div>
+                <div id="route_container" class="offset-lg-2 col-lg-10 mb-2">
+                    <textarea class="form-control" name="route" id="route" rows="5" placeholder="# format #
+nama_kendaraan = jalur yang dilewati
+# contoh #
+T01 = 0-1,1-2,2-5,5-6,6-5,5-2,2-1,1-0
+T04 = 0-1,1-4,4-9,9-4,4-1,1-0
+                    "></textarea>
+                </div>
+            </div>
+        </form>
+        <div id="map"></div>
+    </div>
+    
+    <!-- JQuery -->
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <!-- Popper -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+    <!-- Bootstrap -->
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+    <!-- Google Maps API -->
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAvWaOZr4SshbwyJjA_XSVY82BnF0hw6Z0&callback=initMap" async defer></script>
     <script>
-      // In the following example, markers appear when the user clicks on the map.
-      // Each marker is labeled with a single alphabetical character.
-      
 
-      function initialize() {
-        var bangalore = { lat: 12.97, lng: 77.59 };
-        var map = new google.maps.Map(document.getElementById('map'), {
-          zoom: 12,
-          center: bangalore
-        });
+        // Set tools
+        var route = document.getElementById('route_container');
+        route.style.display = "none";
 
-        // This event listener calls addMarker() when the map is clicked.
-        google.maps.event.addListener(map, 'click', function(event) {
-          addMarker(event.latLng, map);
-        });
+        function setTools() {
+            var index = document.getElementById('tools').selectedIndex;
+            var tool = document.getElementById('tools').options[index].value;
 
-        // Add a marker at the center of the map.
-        addMarker(bangalore, map);
-      }
+            if (tool == "add_route") {
+                route.style.display = "block";
+                getTools(tool);
+            } else {
+                route.style.display = "none";
+                getTools(tool);
+            }
+        }
 
-      
-    </script>
-    <script>
+        function getTools(tool) {
+            var current_tool = tool;
+            return current_tool;
+        }
+        // End set tools
+
         var map, infoWindow;
+        // Location for bekasi city
+        var center_location = {lat: -6.247211669255059, lng: 106.99252300217654}
 
-        // Set current data
-        var location_data = [{
-            position: {lat: -6.237490146065325, lng: 107.04702615737915}
-        }]
+        // store node location
+        var node_data = Array();
         
-        // Initial maps
-        function initMap() {
+        function initMap(tool) {
             map = new google.maps.Map(document.getElementById('map'), {
-                center: {lat: -34.397, lng: 150.644},
-                zoom: 15
+                center: center_location,
+                zoom: 14
             });
-            
-            // Get current location
-            getMyLocation();
 
-            // Set marker for current location
+            // Set marker if there curent location
             initial_data();
 
-            // This event listener calls addMarker() when the map is clicked.
-            google.maps.event.addListener(map, 'click', function(event) {
-                location_data.push({
-                    position: {
-                        lat: event.latLng.lat(),
-                        lng: event.latLng.lng()
-                    }
-                })
+            console.log(tool);
 
-                addMarker(event.latLng, map, ("" + (location_data.length)));
-            });
+            if (tool == "add_node") {
+                // This event listener calls addMarker() when the map is clicked.
+                google.maps.event.addListener(map, 'click', function(event) {
+                    // Store location into array
+                    node_data.push({
+                        label: (node_data.length+1),
+                        position: {
+                            lat: event.latLng.lat(),
+                            lng: event.latLng.lng()
+                        }
+                    })
+
+                    // Set marker
+                    addMarker(event.latLng, map, ("" + (node_data.length)));
+                });    
+            }
+        }
+
+        function initial_data() {
+            // Initial current data
+            for (let i = 0; i < node_data.length; i++) {
+                addMarker(node_data[i].position, map, ("" + i));
+            }
         }
 
         function getMyLocation() {
@@ -98,14 +145,7 @@
                 handleLocationError(false, infoWindow, map.getCenter());
             }
         }
-
-        function initial_data() {
-            // Initial current data
-            for (let i = 0; i < location_data.length; i++) {
-                addMarker(location_data[i].position, map, ("" + i));
-            }
-        }
-    
+          
         function handleLocationError(browserHasGeolocation, infoWindow, pos) {
             infoWindow.setPosition(pos);
             infoWindow.setContent(browserHasGeolocation ?
@@ -122,9 +162,8 @@
                 map: map
             });
             
-            console.log(location_data);
+            console.log(node_data);
         }
     </script>
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAvWaOZr4SshbwyJjA_XSVY82BnF0hw6Z0&callback=initMap" async defer></script>
 </body>
 </html>
